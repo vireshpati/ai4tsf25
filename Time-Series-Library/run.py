@@ -11,7 +11,7 @@ from utils.print_args import print_args
 import random
 import numpy as np
 
-def main():
+if __name__ == '__main__':
     fix_seed = 2021
     random.seed(fix_seed)
     torch.manual_seed(fix_seed)
@@ -237,6 +237,3 @@ def main():
             torch.backends.mps.empty_cache()
         elif args.gpu_type == 'cuda':
             torch.cuda.empty_cache()
-
-if __name__ == '__main__':
-    main()
