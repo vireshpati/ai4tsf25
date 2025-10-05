@@ -1,3 +1,16 @@
 --extra-index-url https://download.pytorch.org/whl/cu118
-torch==2.4.1
+torch
+einops
+local-attention
+matplotlib
+numpy
+pandas
+patool
+reformer-pytorch
+scikit-learn
+scipy
+sktime
+sympy
+tqdm
+PyWavelets
 wandb
