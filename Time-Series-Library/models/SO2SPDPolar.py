@@ -124,48 +124,34 @@ class SO2SPDPolarLayer(nn.Module):
         Returns:
             Rotated tensor with same shape as input
         """
-        input_shape = x.shape
-
-        # Handle multi-head case: [B, T, H, D_head] -> [B*H, T, D_head]
-        if len(input_shape) == 4:
-            B, T, H, D_head = input_shape
-            x = x.reshape(B, T * H, D_head)
-            D = D_head
-        else:
-            # Single-head case: [B, T, D]
-            B, T, D = input_shape
-
+        B, T, H, D = x.shape
         half_dim = D // 2
 
-        # Compute frequencies - use more efficient exp-based approach
+        # Compute frequencies
         freqs = torch.exp(
             -torch.arange(half_dim, device=x.device, dtype=x.dtype) * (math.log(10000.0) / half_dim)
         )
         theta = times[:, None] * freqs[None, :]  # [T, D//2]
 
-        # Compute cos and sin in one pass
+        # Compute cos and sin
         cos_theta = torch.cos(theta)  # [T, D//2]
         sin_theta = torch.sin(theta)  # [T, D//2]
 
-        # Reshape for efficient rotation - use view instead of split
-        x_reshaped = x[..., :2*half_dim].view(x.shape[0], -1, half_dim, 2)
-        x1 = x_reshaped[..., 0]  # [B, T(*H), D//2]
-        x2 = x_reshaped[..., 1]  # [B, T(*H), D//2]
+        # Reshape x for rotation: [B, T, H, D] -> [B, T, H, D//2, 2]
+        x_reshaped = x[..., :2*half_dim].reshape(B, T, H, half_dim, 2)
+        x1 = x_reshaped[..., 0]  # [B, T, H, D//2]
+        x2 = x_reshaped[..., 1]  # [B, T, H, D//2]
 
-        # Apply rotation with fused operations
-        x1_rot = x1 * cos_theta - x2 * sin_theta
-        x2_rot = x1 * sin_theta + x2 * cos_theta
+        # Apply rotation - broadcast cos/sin from [T, D//2] to [B, T, H, D//2]
+        x1_rot = x1 * cos_theta.unsqueeze(0).unsqueeze(2) - x2 * sin_theta.unsqueeze(0).unsqueeze(2)
+        x2_rot = x1 * sin_theta.unsqueeze(0).unsqueeze(2) + x2 * cos_theta.unsqueeze(0).unsqueeze(2)
 
-        # Stack and reshape efficiently
-        x_rot = torch.stack([x1_rot, x2_rot], dim=-1).view(x.shape[0], -1, 2*half_dim)
+        # Stack and reshape back
+        x_rot = torch.stack([x1_rot, x2_rot], dim=-1).reshape(B, T, H, 2*half_dim)
 
         # Handle odd dimensions if needed
         if D % 2 != 0:
             x_rot = torch.cat([x_rot, x[..., -1:]], dim=-1)
-
-        # Restore original shape if multi-head
-        if len(input_shape) == 4:
-            x_rot = x_rot.reshape(B, T, H, D)
 
         return x_rot
 
