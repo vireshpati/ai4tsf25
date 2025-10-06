@@ -11,6 +11,7 @@ import warnings
 import numpy as np
 from utils.dtw_metric import dtw, accelerated_dtw
 from utils.augmentation import run_augmentation, run_augmentation_single
+import wandb
 
 warnings.filterwarnings('ignore')
 
@@ -81,6 +82,28 @@ class Exp_Long_Term_Forecast(Exp_Basic):
         path = os.path.join(self.args.checkpoints, setting)
         if not os.path.exists(path):
             os.makedirs(path)
+
+        # Initialize W&B
+        wandb.init(
+            project=f"{self.args.data}",
+            name=setting,
+            config={
+                "model": self.args.model,
+                "dataset": self.args.data,
+                "seq_len": self.args.seq_len,
+                "pred_len": self.args.pred_len,
+                "d_model": self.args.d_model,
+                "n_heads": self.args.n_heads,
+                "e_layers": self.args.e_layers,
+                "d_layers": self.args.d_layers,
+                "d_ff": self.args.d_ff,
+                "batch_size": self.args.batch_size,
+                "learning_rate": self.args.learning_rate,
+                "dropout": self.args.dropout,
+                "train_epochs": self.args.train_epochs,
+            }
+        )
+        wandb.watch(self.model, log="all", log_freq=100)
 
         time_now = time.time()
 
@@ -153,15 +176,36 @@ class Exp_Long_Term_Forecast(Exp_Basic):
 
             print("Epoch: {0}, Steps: {1} | Train Loss: {2:.7f} Vali Loss: {3:.7f} Test Loss: {4:.7f}".format(
                 epoch + 1, train_steps, train_loss, vali_loss, test_loss))
+
+            # Log to W&B
+            current_lr = model_optim.param_groups[0]['lr']
+            wandb.log({
+                "epoch": epoch + 1,
+                "train_loss": train_loss,
+                "val_loss": vali_loss,
+                "test_loss": test_loss,
+                "learning_rate": current_lr,
+            })
+
             early_stopping(vali_loss, self.model, path)
             if early_stopping.early_stop:
                 print("Early stopping")
+                wandb.run.summary["early_stopped_epoch"] = epoch + 1
                 break
 
             adjust_learning_rate(model_optim, epoch + 1, self.args)
 
         best_model_path = path + '/' + 'checkpoint.pth'
         self.model.load_state_dict(torch.load(best_model_path))
+
+        # Save model to W&B
+        try:
+            artifact=wandb.Artifact(f"{setting}-ckpt", type="model")
+            artifact.add_file(best_model_path)
+            wandb.log_artifact(artifact)
+        except Exception as e:
+            print(f"Error saving model to W&B: {e}")
+
 
         return self.model
 
@@ -264,5 +308,14 @@ class Exp_Long_Term_Forecast(Exp_Basic):
         np.save(folder_path + 'metrics.npy', np.array([mae, mse, rmse, mape, mspe]))
         np.save(folder_path + 'pred.npy', preds)
         np.save(folder_path + 'true.npy', trues)
+
+        # Log final test metrics to W&B
+        if wandb.run is not None:
+            wandb.run.summary["test_mse"] = mse
+            wandb.run.summary["test_mae"] = mae
+            wandb.run.summary["test_rmse"] = rmse
+            wandb.run.summary["test_mape"] = mape
+            wandb.run.summary["test_mspe"] = mspe
+            wandb.finish()
 
         return
