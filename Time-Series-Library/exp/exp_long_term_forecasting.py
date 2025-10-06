@@ -39,7 +39,7 @@ class Exp_Long_Term_Forecast(Exp_Basic):
         """
         Create learning rate scheduler with linear warmup and linear decay
         """
-        warmup_epochs = getattr(self.args, 'warmup_epochs', 5)
+        warmup_epochs = getattr(self.args, 'warmup_epochs', 2)
 
         def lr_lambda(current_step):
             # Calculate total steps
