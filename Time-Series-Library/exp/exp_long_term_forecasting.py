@@ -35,6 +35,28 @@ class Exp_Long_Term_Forecast(Exp_Basic):
         model_optim = optim.Adam(self.model.parameters(), lr=self.args.learning_rate)
         return model_optim
 
+    def _get_lr_scheduler(self, optimizer, train_steps):
+        """
+        Create learning rate scheduler with linear warmup and linear decay
+        """
+        warmup_epochs = getattr(self.args, 'warmup_epochs', 5)
+
+        def lr_lambda(current_step):
+            # Calculate total steps
+            total_steps = self.args.train_epochs * train_steps
+            warmup_steps = warmup_epochs * train_steps
+
+            # Linear warmup
+            if current_step < warmup_steps:
+                return float(current_step) / float(max(1, warmup_steps))
+
+            # Linear decay
+            progress = float(current_step - warmup_steps) / float(max(1, total_steps - warmup_steps))
+            return max(0.0, 1.0 - progress)
+
+        scheduler = optim.lr_scheduler.LambdaLR(optimizer, lr_lambda)
+        return scheduler
+
     def _select_criterion(self):
         criterion = nn.MSELoss()
         return criterion
@@ -83,10 +105,15 @@ class Exp_Long_Term_Forecast(Exp_Basic):
         if not os.path.exists(path):
             os.makedirs(path)
 
-        # Initialize W&B
+        # Initialize W&B with configurable project name
+        # Default: use model name as project (e.g., "SO2SPDPolar")
+        # Override with WANDB_PROJECT env var or pass dataset name for comparisons
+        wandb_project = os.environ.get('WANDB_PROJECT', self.args.model)
+        run_name = f"{self.args.model}_{self.args.data}_{self.args.seq_len}_{self.args.pred_len}"
+
         wandb.init(
-            project=f"{self.args.data}",
-            name=setting,
+            project=wandb_project,
+            name=run_name,
             config={
                 "model": self.args.model,
                 "dataset": self.args.data,
@@ -111,6 +138,7 @@ class Exp_Long_Term_Forecast(Exp_Basic):
         early_stopping = EarlyStopping(patience=self.args.patience, verbose=True)
 
         model_optim = self._select_optimizer()
+        scheduler = self._get_lr_scheduler(model_optim, train_steps)
         criterion = self._select_criterion()
 
         if self.args.use_amp:
@@ -169,6 +197,9 @@ class Exp_Long_Term_Forecast(Exp_Basic):
                     loss.backward()
                     model_optim.step()
 
+                # Step the scheduler after each batch
+                scheduler.step()
+
             print("Epoch: {} cost time: {}".format(epoch + 1, time.time() - epoch_time))
             train_loss = np.average(train_loss)
             vali_loss = self.vali(vali_data, vali_loader, criterion)
@@ -192,8 +223,6 @@ class Exp_Long_Term_Forecast(Exp_Basic):
                 print("Early stopping")
                 wandb.run.summary["early_stopped_epoch"] = epoch + 1
                 break
-
-            adjust_learning_rate(model_optim, epoch + 1, self.args)
 
         best_model_path = path + '/' + 'checkpoint.pth'
         self.model.load_state_dict(torch.load(best_model_path))
