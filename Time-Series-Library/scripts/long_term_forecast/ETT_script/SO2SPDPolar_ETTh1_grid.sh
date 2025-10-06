@@ -7,10 +7,10 @@ model_name=SO2SPDPolar
 # Grid search hyperparameters
 seq_lens=(96)
 pred_lens=(96)
-d_models=(64 128 256)
-n_heads_list=(2 4 8)
+d_models=(128 256)
+n_heads_list=(4 8)
 e_layers_list=(1 2 3)
-learning_rates=(0.0001 0.0005 0.001)
+learning_rates=(0.0001 0.001)
 dropouts=(0.1)
 batch_sizes=(32 64)
 
