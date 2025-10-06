@@ -5,13 +5,13 @@ export CUDA_VISIBLE_DEVICES=0
 model_name=SO2SPDPolar
 
 # Grid search hyperparameters
-seq_lens=(96 192)
-pred_lens=(96 192 336 720)
-d_models=(256 512)
-n_heads_list=(4 8)
+seq_lens=(96)
+pred_lens=(96)
+d_models=(64 128 256)
+n_heads_list=(2 4 8)
 e_layers_list=(1 2 3)
-learning_rates=(0.0001 0.0005)
-dropouts=(0.0 0.1)
+learning_rates=(0.0001 0.0005 0.001)
+dropouts=(0.1)
 batch_sizes=(32 64)
 
 # ETTh1 dataset has 7 channels
