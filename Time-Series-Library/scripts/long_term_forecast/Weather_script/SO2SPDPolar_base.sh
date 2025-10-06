@@ -30,7 +30,7 @@ python -u run.py \
   --batch_size 32 \
   --learning_rate 0.0001 \
   --train_epochs 100 \
-  --patience 10 \
+  --patience 3 \
   --des 'Exp' \
   --itr 1
 
@@ -57,7 +57,7 @@ python -u run.py \
   --batch_size 32 \
   --learning_rate 0.0001 \
   --train_epochs 100 \
-  --patience 10 \
+  --patience 3 \
   --des 'Exp' \
   --itr 1
 
@@ -84,7 +84,7 @@ python -u run.py \
   --batch_size 32 \
   --learning_rate 0.0001 \
   --train_epochs 100 \
-  --patience 10 \
+  --patience 3 \
   --des 'Exp' \
   --itr 1
 
@@ -111,6 +111,6 @@ python -u run.py \
   --batch_size 32 \
   --learning_rate 0.0001 \
   --train_epochs 100 \
-  --patience 10 \
+  --patience 3 \
   --des 'Exp' \
   --itr 1

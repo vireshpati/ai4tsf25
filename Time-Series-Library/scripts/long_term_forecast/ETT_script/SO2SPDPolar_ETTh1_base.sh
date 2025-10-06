@@ -4,8 +4,8 @@ export CUDA_VISIBLE_DEVICES=0
 
 model_name=SO2SPDPolar
 
-# Improved configuration for ETTh1 dataset
-# Changes: dropout 0.1->0.3, d_model 512->384, warmup reduced to 2 epochs
+# Fast & effective configuration based on SOTA papers
+# Key changes: d_model 128, lr 0.001, dropout 0.1, larger batch
 # 7 channels, 4 prediction lengths: 96, 192, 336, 720
 
 python -u run.py \
@@ -25,13 +25,13 @@ python -u run.py \
   --enc_in 7 \
   --dec_in 7 \
   --c_out 7 \
-  --d_model 384 \
-  --n_heads 8 \
-  --dropout 0.3 \
-  --batch_size 32 \
-  --learning_rate 0.0001 \
+  --d_model 128 \
+  --n_heads 4 \
+  --dropout 0.1 \
+  --batch_size 64 \
+  --learning_rate 0.001 \
   --train_epochs 100 \
-  --patience 10 \
+  --patience 3 \
   --des 'Exp' \
   --itr 1
 
@@ -52,13 +52,13 @@ python -u run.py \
   --enc_in 7 \
   --dec_in 7 \
   --c_out 7 \
-  --d_model 384 \
-  --n_heads 8 \
-  --dropout 0.3 \
-  --batch_size 32 \
-  --learning_rate 0.0001 \
+  --d_model 128 \
+  --n_heads 4 \
+  --dropout 0.1 \
+  --batch_size 64 \
+  --learning_rate 0.001 \
   --train_epochs 100 \
-  --patience 10 \
+  --patience 3 \
   --des 'Exp' \
   --itr 1
 
@@ -79,13 +79,13 @@ python -u run.py \
   --enc_in 7 \
   --dec_in 7 \
   --c_out 7 \
-  --d_model 384 \
-  --n_heads 8 \
-  --dropout 0.3 \
-  --batch_size 32 \
-  --learning_rate 0.0001 \
+  --d_model 128 \
+  --n_heads 4 \
+  --dropout 0.1 \
+  --batch_size 64 \
+  --learning_rate 0.001 \
   --train_epochs 100 \
-  --patience 10 \
+  --patience 3 \
   --des 'Exp' \
   --itr 1
 
@@ -106,12 +106,12 @@ python -u run.py \
   --enc_in 7 \
   --dec_in 7 \
   --c_out 7 \
-  --d_model 384 \
-  --n_heads 8 \
-  --dropout 0.3 \
-  --batch_size 32 \
-  --learning_rate 0.0001 \
+  --d_model 128 \
+  --n_heads 4 \
+  --dropout 0.1 \
+  --batch_size 64 \
+  --learning_rate 0.001 \
   --train_epochs 100 \
-  --patience 10 \
+  --patience 3 \
   --des 'Exp' \
   --itr 1
