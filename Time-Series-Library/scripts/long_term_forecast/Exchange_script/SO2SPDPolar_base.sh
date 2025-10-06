@@ -4,7 +4,8 @@ export CUDA_VISIBLE_DEVICES=0
 
 model_name=SO2SPDPolar
 
-# Base configuration for Exchange dataset
+# Fast & effective configuration based on SOTA papers
+# Key changes: d_model 128, lr 0.001, dropout 0.1, larger batch
 # 8 channels, 4 prediction lengths: 96, 192, 336, 720
 
 python -u run.py \
@@ -24,11 +25,11 @@ python -u run.py \
   --enc_in 8 \
   --dec_in 8 \
   --c_out 8 \
-  --d_model 512 \
-  --n_heads 8 \
+  --d_model 128 \
+  --n_heads 4 \
   --dropout 0.1 \
-  --batch_size 32 \
-  --learning_rate 0.0001 \
+  --batch_size 64 \
+  --learning_rate 0.001 \
   --train_epochs 100 \
   --patience 3 \
   --des 'Exp' \
@@ -51,11 +52,11 @@ python -u run.py \
   --enc_in 8 \
   --dec_in 8 \
   --c_out 8 \
-  --d_model 512 \
-  --n_heads 8 \
+  --d_model 128 \
+  --n_heads 4 \
   --dropout 0.1 \
-  --batch_size 32 \
-  --learning_rate 0.0001 \
+  --batch_size 64 \
+  --learning_rate 0.001 \
   --train_epochs 100 \
   --patience 3 \
   --des 'Exp' \
@@ -78,11 +79,11 @@ python -u run.py \
   --enc_in 8 \
   --dec_in 8 \
   --c_out 8 \
-  --d_model 512 \
-  --n_heads 8 \
+  --d_model 128 \
+  --n_heads 4 \
   --dropout 0.1 \
-  --batch_size 32 \
-  --learning_rate 0.0001 \
+  --batch_size 64 \
+  --learning_rate 0.001 \
   --train_epochs 100 \
   --patience 3 \
   --des 'Exp' \
@@ -105,11 +106,11 @@ python -u run.py \
   --enc_in 8 \
   --dec_in 8 \
   --c_out 8 \
-  --d_model 512 \
-  --n_heads 8 \
+  --d_model 128 \
+  --n_heads 4 \
   --dropout 0.1 \
-  --batch_size 32 \
-  --learning_rate 0.0001 \
+  --batch_size 64 \
+  --learning_rate 0.001 \
   --train_epochs 100 \
   --patience 3 \
   --des 'Exp' \
