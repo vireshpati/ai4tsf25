@@ -55,7 +55,7 @@ for seq_len in "${seq_lens[@]}"; do
                   --batch_size $batch_size \
                   --learning_rate $lr \
                   --train_epochs 100 \
-                  --patience 3 \
+                  --patience 10 \
                   --des 'GridSearch' \
                   --itr 1
 
