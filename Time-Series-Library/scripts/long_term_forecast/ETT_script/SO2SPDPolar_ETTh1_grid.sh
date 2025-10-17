@@ -7,12 +7,12 @@ model_name=SO2SPDPolar
 # Grid search hyperparameters
 seq_lens=(96)
 pred_lens=(96)
-d_models=(128 256)
-n_heads_list=(4 8)
-e_layers_list=(1 2 3)
-learning_rates=(0.0001 0.001)
-dropouts=(0.1)
-batch_sizes=(32 64)
+d_models=(256)
+n_heads_list=(8)
+e_layers_list=(3)
+learning_rates=(0.0001)
+dropouts=(0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9)
+batch_sizes=(32)
 
 # ETTh1 dataset has 7 channels
 enc_in=7
