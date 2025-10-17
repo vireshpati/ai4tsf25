@@ -219,7 +219,7 @@ class Model(nn.Module):
         x = self.output_norm(x)
 
         # Output projection
-        output = 0# x @ self.projection # self.projection(x)
+        output = x @ self.projection # self.projection(x)
 
         output = self.forecast_layer((x_enc + output).permute(0, 2, 1)).permute(0, 2, 1)
 
