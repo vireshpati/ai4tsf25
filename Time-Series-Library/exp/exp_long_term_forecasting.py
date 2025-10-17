@@ -155,12 +155,30 @@ class Exp_Long_Term_Forecast(Exp_Basic):
                 model_optim.zero_grad()
                 batch_x = batch_x.float().to(self.device)
                 batch_y = batch_y.float().to(self.device)
+
+
+
+
+
                 batch_x_mark = batch_x_mark.float().to(self.device)
                 batch_y_mark = batch_y_mark.float().to(self.device)
 
                 # decoder input
                 dec_inp = torch.zeros_like(batch_y[:, -self.args.pred_len:, :]).float()
                 dec_inp = torch.cat([batch_y[:, :self.args.label_len, :], dec_inp], dim=1).float().to(self.device)
+
+
+                # Random dropping implementation
+                drop_mask = None
+                if torch.rand(1).item() > 0:
+                    random_drop_rate = torch.rand(1).item()
+                    drop_mask = torch.rand(1, 1, batch_x.shape[2], device=batch_x.device) < 1-random_drop_rate
+                    batch_x = batch_x.masked_fill(drop_mask, 0)
+                    batch_y = batch_y.masked_fill(drop_mask, 0)
+                    batch_x_mark = batch_x_mark.masked_fill(torch.rand(1, 1, batch_x_mark.shape[2], device=batch_x_mark.device) < 1-random_drop_rate, 0)
+
+
+
 
                 # encoder - decoder
                 if self.args.use_amp:
