@@ -31,6 +31,7 @@ python -u run.py \
   --train_epochs 100 \
   --patience 10 \
   --attn_type softmax \
+  --spd_dropout 0.1 \
   --des 'Exp' \
   --itr 1
 
