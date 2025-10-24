@@ -6,13 +6,13 @@ model_name=SO2SPDPolar
 
 # Grid search hyperparameters
 seq_lens=(96)
-pred_lens=(96)
-d_models=(16)
+pred_lens=(96 192 336 720)
+d_models=(16 32 64 128)
 n_heads_list=(8)
-e_layers_list=(2)
-learning_rates=(0.0002)
-dropouts=(0.3)
-batch_sizes=(32)
+e_layers_list=(2 3 4)
+learning_rates=(0.0001 0.0002 0.0003)
+dropouts=(0.1 0.2 0.3)
+batch_sizes=(32 64)
 spd_dropouts=(0.1)
 attn_types=("softmax" "linear")
 
