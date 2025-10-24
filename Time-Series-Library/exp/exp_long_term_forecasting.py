@@ -248,7 +248,9 @@ class Exp_Long_Term_Forecast(Exp_Basic):
 
         # Save model to W&B
         try:
-            artifact=wandb.Artifact(f"{setting}-ckpt", type="model")
+            # Use shorter artifact name to avoid 128 char limit
+            artifact_name = f"{self.args.model}_{self.args.data}_{self.args.pred_len}_ckpt"
+            artifact = wandb.Artifact(artifact_name, type="model")
             artifact.add_file(best_model_path)
             wandb.log_artifact(artifact)
         except Exception as e:
