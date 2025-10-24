@@ -147,7 +147,7 @@ class Exp_Long_Term_Forecast(Exp_Basic):
         early_stopping = EarlyStopping(patience=self.args.patience, verbose=True)
 
         # model_optim = self._select_optimizer()
-        model_optim = optim.AdamW(self.model.parameters(), lr=self.args.learning_rate, weight_decay=0.01)
+        model_optim = optim.AdamW(self.model.parameters(), lr=self.args.learning_rate, weight_decay=0.1, betas= (0.9, 0.95))
         scheduler = self._get_lr_scheduler(model_optim, train_steps)
         criterion = self._select_criterion()
 
