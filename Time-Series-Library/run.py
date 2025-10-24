@@ -88,6 +88,8 @@ if __name__ == '__main__':
                         help='attention type for SO2SPDPolar, options:[softmax, linear]')
     parser.add_argument('--use_associative_scan', action='store_true',
                         help='use associative scan for linear attention (more efficient)', default=False)
+    parser.add_argument('--spd_dropout', type=float, default=0.0,
+                        help='SPD matrix sparsity dropout rate for random dropping (0.0 = no dropout)')
 
     # optimization
     parser.add_argument('--num_workers', type=int, default=10, help='data loader num workers')

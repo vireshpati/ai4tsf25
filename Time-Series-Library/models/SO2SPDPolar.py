@@ -10,13 +10,14 @@ class SO2SPDPolarLayer(nn.Module):
     h_t = R_t S_t R_t^T h_{t-1} + B_t x_t
     """
 
-    def __init__(self, d_model, dropout=0.1, n_head=1, attn_type='softmax', use_associative_scan=False):
+    def __init__(self, d_model, dropout=0.1, n_head=1, attn_type='softmax', use_associative_scan=False, spd_dropout=0.0):
         super(SO2SPDPolarLayer, self).__init__()
         self.d_model = d_model
         self.n_head = n_head
         self.dropout_rate = dropout
         self.attn_type = attn_type
         self.use_associative_scan = use_associative_scan
+        self.spd_dropout_rate = spd_dropout
 
         # Linear projections for Q, K, V
         self.W_q = nn.Linear(d_model, d_model, bias=False)
@@ -34,6 +35,9 @@ class SO2SPDPolarLayer(nn.Module):
 
         # Normalization and dropout
         self.dropout = nn.Dropout(dropout)
+        
+        # SPD sparsity dropout for random dropping in SPD matrix
+        self.spd_dropout = nn.Dropout(spd_dropout) if spd_dropout > 0 else None
 
         self.ln_attn = nn.LayerNorm(d_model)
         self.ln_mlp = nn.LayerNorm(d_model)
@@ -74,6 +78,11 @@ class SO2SPDPolarLayer(nn.Module):
         gj = -F.softplus(self.gate_proj(x_norm)).view(B, T, self.n_head, -1)
         gj_cumsum = gj.cumsum(dim=1).clip(-60, 50)     # [B, T, H, D]
         gj_cumprod = torch.exp(gj_cumsum)
+        
+        # Apply SPD sparsity dropout (random dropping in SPD matrix)
+        if self.spd_dropout is not None and self.training:
+            gj_cumprod = self.spd_dropout(gj_cumprod)
+        
         q = q * gj_cumprod
         k = k / (gj_cumprod + 1e-8)
 
@@ -179,11 +188,13 @@ class Model(nn.Module):
         # Get attention type from configs, default to 'softmax'
         attn_type = getattr(configs, 'attn_type', 'softmax')
         use_associative_scan = getattr(configs, 'use_associative_scan', False)
+        spd_dropout = getattr(configs, 'spd_dropout', 0.0)
 
         # SO2-SPD Polar layers
         self.layers = nn.ModuleList([
             SO2SPDPolarLayer(configs.d_model, configs.dropout, configs.n_heads, 
-                           attn_type=attn_type, use_associative_scan=use_associative_scan)
+                           attn_type=attn_type, use_associative_scan=use_associative_scan,
+                           spd_dropout=spd_dropout)
             for _ in range(configs.e_layers)
         ])
 
