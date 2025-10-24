@@ -109,7 +109,13 @@ class Exp_Long_Term_Forecast(Exp_Basic):
         # Default: use model name as project (e.g., "SO2SPDPolar")
         # Override with WANDB_PROJECT env var or pass dataset name for comparisons
         wandb_project = os.environ.get('WANDB_PROJECT', self.args.model)
-        run_name = f"{self.args.model}_{self.args.data}_{self.args.seq_len}_{self.args.pred_len}"
+        
+        # Include scan type and SPD dropout in run name for easy identification
+        attn_type = getattr(self.args, 'attn_type', 'softmax')
+        spd_dropout = getattr(self.args, 'spd_dropout', 0.0)
+        use_assoc = getattr(self.args, 'use_associative_scan', False)
+        scan_suffix = f"{attn_type}{'_assoc' if use_assoc else ''}_spd{spd_dropout}"
+        run_name = f"{self.args.model}_{self.args.data}_{self.args.seq_len}_{self.args.pred_len}_{scan_suffix}"
 
         wandb.init(
             project=wandb_project,
@@ -128,6 +134,9 @@ class Exp_Long_Term_Forecast(Exp_Basic):
                 "learning_rate": self.args.learning_rate,
                 "dropout": self.args.dropout,
                 "train_epochs": self.args.train_epochs,
+                "attn_type": getattr(self.args, 'attn_type', 'softmax'),
+                "use_associative_scan": getattr(self.args, 'use_associative_scan', False),
+                "spd_dropout": getattr(self.args, 'spd_dropout', 0.0),
             }
         )
         wandb.watch(self.model, log="all", log_freq=100)
