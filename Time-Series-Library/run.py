@@ -84,6 +84,10 @@ if __name__ == '__main__':
                         help='down sampling method, only support avg, max, conv')
     parser.add_argument('--seg_len', type=int, default=96,
                         help='the length of segmen-wise iteration of SegRNN')
+    parser.add_argument('--attn_type', type=str, default='softmax',
+                        help='attention type for SO2SPDPolar, options:[softmax, linear]')
+    parser.add_argument('--use_associative_scan', action='store_true',
+                        help='use associative scan for linear attention (more efficient)', default=False)
 
     # optimization
     parser.add_argument('--num_workers', type=int, default=10, help='data loader num workers')

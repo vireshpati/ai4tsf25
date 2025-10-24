@@ -10,11 +10,13 @@ class SO2SPDPolarLayer(nn.Module):
     h_t = R_t S_t R_t^T h_{t-1} + B_t x_t
     """
 
-    def __init__(self, d_model, dropout=0.1, n_head=1):
+    def __init__(self, d_model, dropout=0.1, n_head=1, attn_type='softmax', use_associative_scan=False):
         super(SO2SPDPolarLayer, self).__init__()
         self.d_model = d_model
         self.n_head = n_head
         self.dropout_rate = dropout
+        self.attn_type = attn_type
+        self.use_associative_scan = use_associative_scan
 
         # Linear projections for Q, K, V
         self.W_q = nn.Linear(d_model, d_model, bias=False)
@@ -42,8 +44,6 @@ class SO2SPDPolarLayer(nn.Module):
             nn.Linear(d_model * 4, d_model),
             nn.Dropout(dropout)
         )
-
-        self.attn_type = 'softmax'
 
         self.clock = nn.Linear(d_model, n_head)
 
@@ -87,7 +87,7 @@ class SO2SPDPolarLayer(nn.Module):
         if self.attn_type == 'softmax':
             output = self.softmax_attention_scan(q, k, v)
         elif self.attn_type == 'linear':
-            output = self.linear_attention_scan(q, k, v)
+            output = self.linear_attention_scan(q, k, v, associative_scan=self.use_associative_scan)
 
         # Output projection and residual connection
         output = output.reshape(B, T, -1)
@@ -176,9 +176,14 @@ class Model(nn.Module):
         # Embedding layer
         self.embedding = DataEmbedding(configs.enc_in, configs.d_model, configs.embed, configs.freq, configs.dropout)
 
+        # Get attention type from configs, default to 'softmax'
+        attn_type = getattr(configs, 'attn_type', 'softmax')
+        use_associative_scan = getattr(configs, 'use_associative_scan', False)
+
         # SO2-SPD Polar layers
         self.layers = nn.ModuleList([
-            SO2SPDPolarLayer(configs.d_model, configs.dropout, configs.n_heads)
+            SO2SPDPolarLayer(configs.d_model, configs.dropout, configs.n_heads, 
+                           attn_type=attn_type, use_associative_scan=use_associative_scan)
             for _ in range(configs.e_layers)
         ])
 
