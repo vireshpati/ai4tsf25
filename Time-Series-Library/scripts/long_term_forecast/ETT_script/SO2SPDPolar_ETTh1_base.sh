@@ -25,9 +25,9 @@ python -u run.py \
   --c_out 7 \
   --d_model 256 \
   --n_heads 8 \
-  --dropout 0.2 \
-  --batch_size 128 \
-  --learning_rate 0.0005 \
+  --dropout 0.3 \
+  --batch_size 32 \
+  --learning_rate 0.0001 \
   --train_epochs 100 \
   --patience 10 \
   --attn_type softmax \

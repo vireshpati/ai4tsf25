@@ -43,13 +43,14 @@ class SO2SPDPolarLayer(nn.Module):
         self.ln_mlp = nn.LayerNorm(d_model)
 
         self.mlp = nn.Sequential(
-            nn.Linear(d_model, d_model * 4),
+            nn.Linear(d_model, d_model * 2),
             nn.GELU(),
-            nn.Linear(d_model * 4, d_model),
+            nn.Linear(d_model * 2, d_model),
             nn.Dropout(dropout)
         )
 
         self.clock = nn.Linear(d_model, n_head)
+        self.norm = nn.LayerNorm(d_model)
 
     def forward(self, x):
         B, T, D = x.shape
@@ -100,6 +101,7 @@ class SO2SPDPolarLayer(nn.Module):
 
         # Output projection and residual connection
         output = output.reshape(B, T, -1)
+        output = self.norm(output)
         output = self.dropout(self.out_proj(output))
 
         x = output + residual
@@ -199,13 +201,14 @@ class Model(nn.Module):
         ])
 
         # Output projections for different tasks
-        self.projection = nn.Parameter(torch.zeros(configs.d_model, configs.c_out)) # nn.Linear(configs.d_model, configs.c_out, bias=True)
+        self.projection = nn.Parameter(0.02*torch.randn(configs.d_model, configs.c_out)) # nn.Linear(configs.d_model, configs.c_out, bias=True)
+        self.input_projection = nn.Parameter(0.02*torch.randn(configs.enc_in, configs.d_model)) # nn.Linear(configs.c_in, configs.d_model, bias=True)
 
         # Forecast layer
-        self.forecast_layer = nn.Sequential(nn.Linear(configs.seq_len, 512),
+        self.forecast_layer = nn.Sequential(nn.Linear(configs.seq_len, 2*configs.seq_len),
                                             nn.GELU(),
                                             nn.Dropout(configs.dropout),
-                                            nn.Linear(512, configs.pred_len))
+                                            nn.Linear(2*configs.seq_len, configs.pred_len))
 
         # Initialize weights
         self.apply(self._init_weights)
@@ -218,14 +221,15 @@ class Model(nn.Module):
         elif isinstance(module, nn.Embedding):
             torch.nn.init.normal_(module.weight, mean=0.0, std=0.02)
 
-    def forecast(self, x_enc, x_mark_enc):
+    def forecast(self, x_enc, x_mark_enc=None):
         mean_enc = x_enc.mean(1, keepdim=True).detach()
         x_enc = x_enc - mean_enc
         std_enc = (x_enc.std(dim=1, keepdim=True, unbiased=False) + 1e-5).detach()
         x_enc = x_enc / std_enc
 
         # Embedding
-        x = self.embedding(x_enc, x_mark_enc)
+        # x = self.embedding(x_enc, x_mark_enc)
+        x = x_enc @ self.input_projection  # self.input_projection(x_enc)
         x = self.input_norm(x)
 
         # SO2-SPD Polar layers
