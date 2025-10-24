@@ -110,12 +110,22 @@ class Exp_Long_Term_Forecast(Exp_Basic):
         # Override with WANDB_PROJECT env var or pass dataset name for comparisons
         wandb_project = os.environ.get('WANDB_PROJECT', self.args.model)
         
-        # Include scan type and SPD dropout in run name for easy identification
+        # Build compact run name (<120 chars) with architecture & attention info
         attn_type = getattr(self.args, 'attn_type', 'softmax')
-        spd_dropout = getattr(self.args, 'spd_dropout', 0.0)
         use_assoc = getattr(self.args, 'use_associative_scan', False)
-        scan_suffix = f"{attn_type}{'_assoc' if use_assoc else ''}_spd{spd_dropout}"
-        run_name = f"{self.args.model}_{self.args.data}_{self.args.seq_len}_{self.args.pred_len}_{scan_suffix}"
+        
+        # Abbreviate attention type: softmax->sm, linear->ln, etc.
+        attn_abbr = {'softmax': 'sm', 'linear': 'ln', 'cosine': 'cos'}.get(attn_type, attn_type[:3])
+        assoc_str = 'A' if use_assoc else ''
+        
+        # Format: model_data_S->P_d_h_L_attn
+        # Example: SO2SPDPo_ETTh1_336->96_d512_h8_L4_smA
+        run_name = (
+            f"{self.args.model[:8]}_{self.args.data}_"
+            f"{self.args.seq_len}->{self.args.pred_len}_"
+            f"d{self.args.d_model}_h{self.args.n_heads}_L{self.args.e_layers}_"
+            f"{attn_abbr}{assoc_str}"
+        )
 
         wandb.init(
             project=wandb_project,
